@@ -1,0 +1,4 @@
+﻿  main.c
+C:\Users\idymc\source\repos\Aboba\main.c(270,105): warning C4020: nk_label_wrap: слишком много фактических параметров
+C:\Users\idymc\source\repos\Aboba\main.c(324,64): warning C4244: =: преобразование "double" в "float", возможна потеря данных
+  Aboba.vcxproj -> C:\Users\idymc\source\repos\Aboba\Debug\Aboba.exe
