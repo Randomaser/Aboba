@@ -342,7 +342,7 @@ int main(void)
                             {
                             for (int ji = 0; ji < 30; ji++)
                                 result[i][0][ji] = table[i].name[ji];
-                            sprintf(result[i][1], "%.0f", table[i].pay * table[i].count);
+                            sprintf(result[i][1], "%.2f", table[i].pay * table[i].count);
                             
                             }
                         res_out = 1;

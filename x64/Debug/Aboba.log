@@ -1,6 +1,1 @@
-﻿  main.c
-C:\Users\idymc\source\repos\Aboba\nuklear_d3d11.h(385,79): warning C4244: функция: преобразование "SIZE_T" в "int", возможна потеря данных
-C:\Users\idymc\source\repos\Aboba\nuklear_d3d11.h(391,72): warning C4244: функция: преобразование "SIZE_T" в "int", возможна потеря данных
-C:\Users\idymc\source\repos\Aboba\main.c(270,105): warning C4020: nk_label_wrap: слишком много фактических параметров
-C:\Users\idymc\source\repos\Aboba\main.c(324,64): warning C4244: =: преобразование "double" в "float", возможна потеря данных
-  Aboba.vcxproj -> C:\Users\idymc\source\repos\Aboba\x64\Debug\Aboba.exe
+﻿  Aboba.vcxproj -> C:\Users\idymc\source\repos\Aboba\x64\Debug\Aboba.exe
