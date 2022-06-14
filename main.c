@@ -1,4 +1,12 @@
 /* nuklear - 1.32.0 - public domain */
+/* ===============================================================
+ *
+ *               ПОДКЛЮЧЕНИЕ НЕОБХОДИМЫХ БИБЛИОТЕК
+ *
+ * ===============================================================*/
+
+// Библиотеки для работы с графическим интерфейсом
+
 #define COBJMACROS
 #define WIN32_LEAN_AND_MEAN
 #define _CRT_SECURE_NO_WARNINGS
@@ -9,11 +17,15 @@
 #include <limits.h>
 #include <time.h>
 
+// Задание параметром приложения (констант)
+
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
 #define MAX_VERTEX_BUFFER 512 * 1024
 #define MAX_INDEX_BUFFER 128 * 1024
+
+// Подключение библиотеки Nuklear (через которую и осуществляется работа с окном)
 
 #define NK_INCLUDE_FIXED_TYPES
 #define NK_INCLUDE_STANDARD_IO
@@ -24,83 +36,54 @@
 #define NK_INCLUDE_DEFAULT_FONT
 #define NK_IMPLEMENTATION
 #define NK_D3D11_IMPLEMENTATION
-//#define INCLUDE_OVERVIEW
-//#define INCLUDE_NODE_EDITOR
 #include "nuklear.h"
-//#include "nuklear_d3d11_pixel_shader.h"
-//#include "nuklear_d3d11_vertex_shader.h"
 #include "nuklear_d3d11.h"
-//#pragma comment(lib, "d3d11.lib")
 
 /* ===============================================================
  *
- *                          EXAMPLE
+ *                 ОБЪЯВЛЕНИЕ ТИПОВ, ПЕРЕМЕННЫХ
  *
  * ===============================================================*/
-/* This are some code examples to provide a small overview of what can be
- * done with this library. To try out an example uncomment the defines */
-/*#define INCLUDE_ALL */
-/*#define INCLUDE_STYLE */
-/*#define INCLUDE_CALCULATOR */
-/*#define INCLUDE_CANVAS */
-/*#define INCLUDE_OVERVIEW */
-/*#define INCLUDE_NODE_EDITOR */
 
-#ifdef INCLUDE_ALL
-  #define INCLUDE_STYLE
-  #define INCLUDE_CALCULATOR
-  #define INCLUDE_CANVAS
-  #define INCLUDE_OVERVIEW
-  #define INCLUDE_NODE_EDITOR
-#endif
+// Настройки d3d11 - одной из возможных библиотек для вывода изображения в окне
 
-#ifdef INCLUDE_STYLE
-  #include "../../demo/common/style.c"
-#endif
-#ifdef INCLUDE_CALCULATOR
-  #include "../../demo/common/calculator.c"
-#endif
-#ifdef INCLUDE_CANVAS
-  #include "../../demo/common/canvas.c"
-#endif
-#ifdef INCLUDE_OVERVIEW
-  #include "../../demo/common/overview.c"
-#endif
-#ifdef INCLUDE_NODE_EDITOR
-  #include "../../demo/common/node_editor.c"
-#endif
-
-/* ===============================================================
- *
- *                          DEMO
- *
- * ===============================================================*/
 static IDXGISwapChain *swap_chain;
 static ID3D11Device *device;
 static ID3D11DeviceContext *context;
 static ID3D11RenderTargetView* rt_view;
 
+// Создание типа записи (структуры)
+
 typedef struct _record
 {
-    int PK;
-    char name[30];
-    float pay;
-    int count;
+    int PK;        // Первыичный ключ -- уникальный
+    char name[30]; // Имя - строка (30 символов)
+    float pay;     // Оплата за минуту
+    int count;     // Количество минут
 } rec;
 
-rec table[30];
-int rec_count;
-char buffer[256];
-char result[30][3][30];
-char res_out = 0;
+rec table[30];          // Создание таблицы из таких записей
+int rec_count;          // Количество заполненных записей в таблице
+char buffer[256];       // Буфер для ввода текста в edit box
+char result[30][3][30]; // Вывод результата (т.к. в результате свои поля, а в таблице свои, создаётся массив для 30 строк
+                        // в котором 3 столбца по 30 символов каждый
+char res_out = 0;       // переменная логического типа, выводить ли результат или нет
 
-void clear_buf(char* buf, int n)
+/* ===============================================================
+ *
+ *                 ОБЪЯВЛЕНИЕ ФУНКЦИЙ
+ *
+ * ===============================================================*/
+
+void clear_buf(char* buf, int n) // функция, отвечающая за очистку буфера
 {
     for (int i = 0; i < n; i++)
     {
-        buf[i] = '\0';
+        buf[i] = '\0';           // Заполнение пустыми символами
     }
 }
+
+// Функция, отвечающая зв инициализацию окна в windows
 
 static void
 set_swap_chain_size(int width, int height)
@@ -136,6 +119,8 @@ set_swap_chain_size(int width, int height)
     ID3D11Texture2D_Release(back_buffer);
 }
 
+// Функция обработки сообщений раз в тик времени в Windows
+
 static LRESULT CALLBACK
 WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
@@ -162,12 +147,20 @@ WindowProc(HWND wnd, UINT msg, WPARAM wparam, LPARAM lparam)
     return DefWindowProcW(wnd, msg, wparam, lparam);
 }
 
+/* ===============================================================
+ *
+ *                 ОСНОВНАЯ ФУНКЦИЯ
+ *
+ * ===============================================================*/
+
 int main(void)
 {
-    struct nk_context *ctx;
-    struct nk_colorf bg;
+    struct nk_context *ctx; // Создание окна в nuklear
+    struct nk_colorf bg;    // Фон в окне
 
-    WNDCLASSW wc;
+    // Создание переменных, необходимых для работе в окне Windows
+
+    WNDCLASSW wc;           
     RECT rect = { 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT };
     DWORD style = WS_OVERLAPPEDWINDOW;
     DWORD exstyle = WS_EX_APPWINDOW;
@@ -177,7 +170,8 @@ int main(void)
     D3D_FEATURE_LEVEL feature_level;
     DXGI_SWAP_CHAIN_DESC swap_chain_desc;
 
-    /* Win32 */
+    /* Инициаоизация окна типа Win32 */
+
     memset(&wc, 0, sizeof(wc));
     wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = WindowProc;
@@ -194,7 +188,7 @@ int main(void)
         rect.right - rect.left, rect.bottom - rect.top,
         NULL, NULL, wc.hInstance, NULL);
 
-    /* D3D11 setup */
+    /* Инициализация D3D11 */
     memset(&swap_chain_desc, 0, sizeof(swap_chain_desc));
     swap_chain_desc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
@@ -220,36 +214,25 @@ int main(void)
     }
     set_swap_chain_size(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+ /* ===============================================================
+ *
+ *                 НАЧАЛО ОСНОВНОГО КОДА
+ *
+ * ===============================================================*/
+
+    // Начальное значение в edit
     strcpy(buffer, "D:\\Database.txt");
 
-    /* GUI */
+    /* Инициализация GUI интерфейса */
     ctx = nk_d3d11_init(device, WINDOW_WIDTH, WINDOW_HEIGHT, MAX_VERTEX_BUFFER, MAX_INDEX_BUFFER);
-    /* Load Fonts: if none of these are loaded a default font will be used  */
-    /* Load Cursor: if you uncomment cursor loading please hide the cursor */
     {struct nk_font_atlas *atlas;
     nk_d3d11_font_stash_begin(&atlas);
-    /*struct nk_font *droid = nk_font_atlas_add_from_file(atlas, "../../extra_font/DroidSans.ttf", 14, 0);*/
-    /*struct nk_font *robot = nk_font_atlas_add_from_file(atlas, "../../extra_font/Roboto-Regular.ttf", 14, 0);*/
-    /*struct nk_font *future = nk_font_atlas_add_from_file(atlas, "../../extra_font/kenvector_future_thin.ttf", 13, 0);*/
-    /*struct nk_font *clean = nk_font_atlas_add_from_file(atlas, "../../extra_font/ProggyClean.ttf", 12, 0);*/
-    /*struct nk_font *tiny = nk_font_atlas_add_from_file(atlas, "../../extra_font/ProggyTiny.ttf", 10, 0);*/
-    /*struct nk_font *cousine = nk_font_atlas_add_from_file(atlas, "../../extra_font/Cousine-Regular.ttf", 13, 0);*/
-    nk_d3d11_font_stash_end();
-    /*nk_style_load_all_cursors(ctx, atlas->cursors);*/
-    /*nk_style_set_font(ctx, &droid->handle)*/;}
-
-    /* style.c */
-    #ifdef INCLUDE_STYLE
-    /*set_style(ctx, THEME_WHITE);*/
-    /*set_style(ctx, THEME_RED);*/
-    /*set_style(ctx, THEME_BLUE);*/
-    /*set_style(ctx, THEME_DARK);*/
-    #endif
+    nk_d3d11_font_stash_end();}
 
     bg.r = 0.10f, bg.g = 0.18f, bg.b = 0.24f, bg.a = 1.0f;
     while (running)
     {
-        /* Input */
+        // Обработка сообщений
         MSG msg;
         nk_input_begin(ctx);
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -261,112 +244,127 @@ int main(void)
         }
         nk_input_end(ctx);
 
-        /* GUI */
-        if (nk_begin(ctx, "Calculator", nk_rect(50, 50, 480, 400),
-            NK_WINDOW_BORDER | NK_WINDOW_MOVABLE /*| NK_WINDOW_SCALABLE*/ |
-            NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))
+        /* Начало интерфейса */
+
+        // Если создание окна будет успешно, то продолжение кода, иначе вывод соответствующего сообщения
+
+        if (nk_begin(ctx, "Calculator", nk_rect(50, 50, 480, 400),  // Инициализация окна ( Где показывать, Название окна, 
+            NK_WINDOW_BORDER | NK_WINDOW_MOVABLE |                  // расположение окна (где находится левый верхний угол и его размеры)
+            NK_WINDOW_MINIMIZABLE | NK_WINDOW_TITLE))               // доп. параметры (показ границ окна, возможность его двигать, скрывать, и показ его заголовка)
         {
-            nk_layout_row_dynamic(ctx, 30, 1);
+            // Выделение области под объект
+            nk_layout_row_dynamic(ctx, 30, 1); 
+            //Инифиализация объекта
             nk_label_wrap(ctx, "Hello! This program can calculate cost of one call telephone company!", NK_TEXT_CENTERED);
+            
             nk_layout_row_dynamic(ctx, 60, 1);
             nk_label(ctx, "Please, write the path to the database file below:", NK_TEXT_ALIGN_BOTTOM | NK_TEXT_ALIGN_LEFT);
+            
             nk_layout_row_dynamic(ctx, 40, 1);
+            // Создание элемента EditBox, в котором пользователь прописывает путь
             nk_flags event = nk_edit_string_zero_terminated(ctx,
-                NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, //fcous will auto select all text (NK_EDIT_BOX not sure)
+                NK_EDIT_BOX | NK_EDIT_AUTO_SELECT, //focus will auto select all text (NK_EDIT_BOX not sure)
                 buffer, sizeof(buffer), nk_filter_ascii);
 
+            // Вывод результата
+            
             for (int i = 0; i < rec_count; i++)
             {
                 nk_layout_row_dynamic(ctx, 15, 2);
                 nk_label(ctx, result[i][0], NK_TEXT_CENTERED);
                 nk_label(ctx, result[i][1], NK_TEXT_CENTERED);
             }
-                    
+            
+            // Создание пустого пространства
             nk_layout_row_dynamic(ctx, 60, 1);
+
+            // Выделение места под кнопку
             nk_layout_row_dynamic(ctx, 30, 1);
+            // Создание кнопки
             if (nk_button_label(ctx, "Calculate!"))
             {
-                rec_count = 0;
-                res_out = 0;
-                char boo = 0;
+
+                /* ===============================================================
+                *
+                *                 ПРИ НАЖАТИИ КНОПКИ
+                *
+                * ===============================================================*/
+
+                // Инициализация переменных
+                rec_count = 0;                                                  // Обнуление числа записей в таблице
+                res_out = 0;                                                    // Обнуление числа записей в выходной таблице
+                char boo = 0;                                                   // Логическая переменная, отвечающая за запуск чтения файла
                 if (!boo)
                 {
-                    char* filename = buffer;//"D:\\Database.txt";
-                    FILE* fp;
-                    if ((fp = fopen(filename, "r+")) != NULL)
+                    char* filename = buffer;                                    // Передача путя к файлу в специальную переменную. По умолчанию: "D:\\Database.txt";
+                    FILE* fp;                                                   // Переменная файла
+                    if ((fp = fopen(filename, "r+")) != NULL)                   // При успешном открытии файла на чтение присваиваем переменной fp данный файл
                     {
-                        enum cols {
-                            NAME,
-                            PAY,
-                            COUNT
+                        enum cols {                                             // Более удобное описание столбцов (вместо цыферок - букАвки)
+                            NAME,                                               //0, соответствует первому полю записи
+                            PAY,                                                //1, соответствует второму полю записи
+                            COUNT                                               //2, соответствует третьему полю записи
                         };
-                        char c;
-                        char buf[30];
-                        int j = 0;
-                        int i = 0;
-                        clear_buf(buf, 30);
+                        char c;                                                 // Читаемый символ    
+                        char buf[30];                                           // Буфер для значений
+                        int j = 0;                                              // переменная для буфера buf (где находится каретка)
+                        int i = 0;                                              // переменная для отслеживания столбца
+                        clear_buf(buf, 30);                                     // очистка буфера
 
-                        while ((c = getc(fp)) != EOF)
+                        while ((c = getc(fp)) != EOF)                           // Чтение символа пока не конец файла
                         {
-                            if (c == '\t' || (c == '\n' && i == 2))
+                            if (c == '\t' || (c == '\n' && i == 2))             // Отслеживание перехода столбца
                             {
                                 switch (i)
                                 {
                                 case NAME:
-                                    table[rec_count].PK = rec_count;
-                                    for (int ji = 0; ji < 30; ji++)
+                                    table[rec_count].PK = rec_count;            // Записываем значение первичного ключа в нужный столбец
+                                    for (int ji = 0; ji < 30; ji++)             //Цикл для очистки буфера и переноса строки из буфера в столбец
                                     {
-                                        table[rec_count].name[ji] = buf[ji];
-                                        buf[ji] = '\0';
+                                        table[rec_count].name[ji] = buf[ji];    //Перенос символа
+                                        buf[ji] = '\0';                         //Очистка буфера
                                     }
                                     break;
                                 case PAY:
-                                    table[rec_count].pay = atof(buf);
-                                    clear_buf(buf, 30);
+                                    table[rec_count].pay = atof(buf);           // Перенос значения в нужный столбец
+                                    clear_buf(buf, 30);                         // очистка буфера
                                     break;
                                 case COUNT:
-                                    table[rec_count].count = atoi(buf);
-                                    clear_buf(buf, 30);
-                                    rec_count++;
-                                    i = -1;
+                                    table[rec_count].count = atoi(buf);         // Перенос значения в нужный столбец
+                                    clear_buf(buf, 30);                         // Очистка буфера
+                                    rec_count++;                                // Увеличение количества ЗАПОЛНЕННЫХ записей на 1
+                                    i = -1;                                     // Сброс столбца
                                     break;
                                 };
-                                i++;
-                                j = 0;
+                                i++;                                            // Переход в следующий столбец
+                                j = 0;                                          // Сброс каретки в буфере
                                 continue;
                             }
-                            buf[j++] = c;
+                            buf[j++] = c;                                       // Перенос читаемого символа в буфер
                         }
-                        fclose(fp);
-                        for (int i = 0; i < rec_count; i++)
+                        fclose(fp);                                             //Закрытие файла
+                        for (int i = 0; i < rec_count; i++)                     // Пробег по всем записям таблицы
                             {
-                            for (int ji = 0; ji < 30; ji++)
-                                result[i][0][ji] = table[i].name[ji];
-                            sprintf(result[i][1], "%.2f", table[i].pay * table[i].count);
+                            for (int ji = 0; ji < 30; ji++)                     // Перенос значения первого столбца (имени (строки)) в результирующую таблицу
+                                result[i][0][ji] = table[i].name[ji];           
+                            sprintf(result[i][1], "%.2f",                       // Подсчёт общей цены за звонок(-и) и перенос в результирующую таблицу
+                                table[i].pay * table[i].count);
                             
                             }
-                        res_out = 1;
+                        res_out = 1;                                            // Меняем переключатель на "ДА" (выводить таблицу)
                     }
-                    else MessageBox(NULL, L"Error while reading file!", L"Error", 0);
+                    else MessageBox(NULL, L"Error while reading file!", L"Error", 0);   // Ежели чтение файла было неуспешным, то выводится соответствующее сообщение
                 }
             }
     }
-        nk_end(ctx);
+    nk_end(ctx);    // Завершение окна
 
-        /* -------------- EXAMPLES ---------------- */
-        #ifdef INCLUDE_CALCULATOR
-          calculator(ctx);
-        #endif
-        #ifdef INCLUDE_CANVAS
-          canvas(ctx);
-        #endif
-        #ifdef INCLUDE_OVERVIEW
-          overview(ctx);
-        #endif
-        #ifdef INCLUDE_NODE_EDITOR
-          node_editor(ctx);
-        #endif
-        /* ----------------------------------------- */
+
+       /* ===============================================================
+        *
+        *                 ОТРИСОВКА ИНТЕРФЕЙСА НА ЭКРАН
+        *
+        * ===============================================================*/
 
         /* Draw */
         ID3D11DeviceContext_ClearRenderTargetView(context, rt_view, &bg.r);
@@ -383,6 +381,12 @@ int main(void)
         }
         assert(SUCCEEDED(hr));
     }
+
+    /* ===============================================================
+     *
+     *                 Освобождеине памяти после завершения
+     *
+     * ===============================================================*/
 
     ID3D11DeviceContext_ClearState(context);
     nk_d3d11_shutdown();
